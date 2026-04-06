@@ -3,239 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Good Games Portal V5.1</title>
+    <title>GG TITAN ADMIN V5.2</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        :root { --main: #FBC02D; --bg: #000; --card: #111; --text: #fff; --nav: #151515; --online: #4CAF50; --vip: #FFD700; --ban: #ff4444; }
+        :root { --main: #FBC02D; --bg: #050505; --card: #121212; --text: #eee; --red: #ff4444; --green: #4CAF50; --blue: #2196F3; }
         
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; overflow: hidden; height: 100vh; transition: background 0.5s; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; }
 
-        /* ПЛАВНАЯ АНИМАЦИЯ ПОЯВЛЕНИЯ */
-        @keyframes pageFade {
-            from { opacity: 0; transform: scale(0.98); }
-            to { opacity: 1; transform: scale(1); }
+        /* ПЛАВНАЯ АНИМАЦИЯ СПИСКА */
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .page { display: none; animation: pageFade 0.3s ease-out; height: 100%; }
-        .page.active { display: block; }
+        h1 { color: var(--main); text-align: center; font-size: 26px; text-transform: uppercase; letter-spacing: 2px; border-bottom: 2px solid #222; padding-bottom: 10px; }
+        h2 { color: #888; font-size: 18px; margin-top: 30px; border-left: 4px solid var(--main); padding-left: 10px; }
 
-        /* КАРТОЧКИ И КНОПКИ */
+        /* ПОИСК */
+        #search { 
+            width: 100%; padding: 15px; background: #1a1a1a; border: 1px solid #333; 
+            color: #fff; border-radius: 10px; font-size: 16px; margin-bottom: 20px; outline: none;
+            transition: 0.3s;
+        }
+        #search:focus { border-color: var(--main); box-shadow: 0 0 10px rgba(251, 192, 45, 0.2); }
+
+        /* КАРТОЧКИ ПОЛЬЗОВАТЕЛЕЙ */
         .card { 
-            background: var(--card); padding: 15px; border-radius: 12px; 
-            border: 1px solid #222; margin-bottom: 15px; position: relative;
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--card); padding: 18px; border-radius: 15px; border: 1px solid #222; 
+            margin-bottom: 12px; animation: slideIn 0.3s ease-out forwards; position: relative;
         }
+
+        /* КНОПКИ УПРАВЛЕНИЯ */
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; }
         .btn { 
-            background: var(--main); color: #000; font-weight: bold; border: none; 
-            padding: 12px; border-radius: 8px; cursor: pointer; width: 100%; 
-            margin: 5px 0; transition: 0.2s; outline: none;
+            padding: 12px; border: none; border-radius: 8px; cursor: pointer; 
+            font-weight: bold; font-size: 12px; transition: 0.2s; text-transform: uppercase;
         }
-        .btn:active { transform: scale(0.95); opacity: 0.8; }
+        .btn:active { transform: scale(0.95); }
+        
+        .btn-vip { background: var(--main); color: #000; }
+        .btn-ver { background: var(--blue); color: #fff; }
+        .btn-ban { background: var(--red); color: #fff; }
+        .btn-unban { background: #444; color: #fff; }
+        .btn-del { background: #222; color: #888; grid-column: span 2; border: 1px solid #333; }
 
-        /* НИЖНЯЯ ПАНЕЛЬ */
-        .nav-bar { 
-            position: fixed; bottom: 0; left: 0; width: 100%; height: 75px; 
-            background: var(--nav); border-top: 1px solid #333; 
-            display: flex; justify-content: space-around; align-items: center; z-index: 1000;
-        }
-        .nav-btn { color: #666; text-align: center; font-size: 11px; cursor: pointer; flex: 1; transition: 0.3s; }
-        .nav-btn.active { color: var(--main); transform: translateY(-5px); font-weight: bold; }
-        .nav-btn span { font-size: 22px; display: block; margin-bottom: 3px; }
-
-        /* RGB РЕЖИМ */
-        @keyframes rgb-border {
-            0% { border-color: #f00; box-shadow: 0 0 10px #f00; }
-            33% { border-color: #0f0; box-shadow: 0 0 10px #0f0; }
-            66% { border-color: #00f; box-shadow: 0 0 10px #00f; }
-            100% { border-color: #f00; box-shadow: 0 0 10px #f00; }
-        }
-        .rgb-active .card { animation: rgb-border 2s linear infinite; border-width: 2px; }
-
-        /* ЭКРАНЫ */
-        #auth-box { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 5000; }
-        input { width: 100%; padding: 12px; margin: 8px 0; background: #222; border: 1px solid #444; color: #fff; border-radius: 8px; box-sizing: border-box; }
-        .content-area { flex: 1; overflow-y: auto; padding: 15px; padding-bottom: 90px; }
-        .friend-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #1a1a1a; margin-bottom: 8px; border-radius: 10px; border-left: 4px solid var(--main); }
+        /* ИНФО-БЛОКИ */
+        .nick-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .nick-name { font-size: 20px; font-weight: bold; }
+        .badge { font-size: 10px; padding: 3px 8px; border-radius: 5px; font-weight: bold; margin-left: 5px; }
+        .b-ban { background: var(--red); color: #fff; }
+        .b-ver { background: var(--blue); color: #fff; }
+        
+        .info-text { font-size: 13px; color: #999; margin: 4px 0; font-family: monospace; }
+        .val { color: var(--green); font-weight: bold; }
+        .dev-id { background: #222; color: var(--main); padding: 2px 5px; border-radius: 4px; }
     </style>
 </head>
 <body>
 
-<div id="auth-box">
-    <div id="login-form" style="width:80%; max-width:300px; text-align:center;">
-        <h1 style="color:var(--main)">GOOD GAMES</h1>
-        <input type="text" id="l-n" placeholder="Ник">
-        <input type="password" id="l-p" placeholder="Пароль">
-        <button class="btn" onclick="login()">ВХОД</button>
-        <p onclick="showAuth('reg')" style="color:#666;">Регистрация</p>
-    </div>
-    <div id="reg-form" style="width:80%; max-width:300px; text-align:center; display:none;">
-        <h1 style="color:var(--main)">РЕГИСТРАЦИЯ</h1>
-        <input type="text" id="r-n" placeholder="Новый ник">
-        <input type="password" id="r-p" placeholder="Пароль">
-        <button class="btn" onclick="register()">СОЗДАТЬ</button>
-        <p onclick="showAuth('login')" style="color:#666;">Назад</p>
-    </div>
-</div>
+<h1>TITAN ADMIN V5.2</h1>
 
-<div id="portal-ui" style="display:none; height:100vh; flex-direction:column;">
-    <div class="content-area">
-        <div id="p-games" class="page active">
-            <h2 style="color:var(--main)">🎮 ИГРЫ</h2>
-            <div id="games-list"></div>
-        </div>
-
-        <div id="p-add" class="page">
-            <h2 style="color:var(--main)">➕ ОПУБЛИКОВАТЬ</h2>
-            <div id="add-content"></div>
-        </div>
-
-        <div id="p-user" class="page">
-            <h2 style="color:var(--main)">👤 ПРОФИЛЬ</h2>
-            <div class="card" id="profile-info"></div>
-            <h3 style="color:var(--main)">🔍 ПОИСК ЛЮДЕЙ</h3>
-            <div class="card">
-                <input type="text" id="u-search" placeholder="Ник..." oninput="search()">
-                <div id="search-res"></div>
-            </div>
-            <h3 style="color:var(--main)">🤝 ДРУЗЬЯ</h3>
-            <div id="friends-list"></div>
-        </div>
-    </div>
-
-    <div class="nav-bar">
-        <div class="nav-btn active" onclick="tab('games', this)"><span>🎮</span>Игры</div>
-        <div class="nav-btn" onclick="tab('add', this)"><span>➕</span>Создать</div>
-        <div class="nav-btn" onclick="tab('user', this)"><span>👤</span>Профиль</div>
-    </div>
+<div class="container">
+    <h2>👥 УПРАВЛЕНИЕ ИГРОКАМИ</h2>
+    <input type="text" id="search" placeholder="Поиск ника или DeviceID..." oninput="render()">
+    <div id="u_list">Подключение к базе данных...</div>
 </div>
 
 <script>
+    // Твой конфиг Firebase (оставь свой)
     const firebaseConfig = { apiKey: "AIzaSyCD1HEwz_NsJDasETxc6X4IdCJ6_WFj-LA", databaseURL: "https://goodgames-222444-default-rtdb.firebaseio.com" };
-    firebase.initializeApp(firebaseConfig); const db = firebase.database();
-    
-    let me = { nick: "", vip: false, verified: false };
-    let secretCombo = [];
-    const winCombo = "games,user,games,add,user";
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-    function getDeviceID() {
-        const info = [navigator.userAgent, screen.width].join('|');
-        let hash = 0;
-        for (let i = 0; i < info.length; i++) { hash = ((hash << 5) - hash) + info.charCodeAt(i); hash |= 0; }
-        return "DEV-" + Math.abs(hash);
-    }
-    const myDeviceID = getDeviceID();
+    let allUsers = {};
 
-    function tab(id, el) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('p-' + id).classList.add('active');
-        if(el) el.classList.add('active');
+    // Загрузка в реальном времени
+    db.ref('users').on('value', s => {
+        allUsers = s.val() || {};
+        render();
+    });
 
-        secretCombo.push(id);
-        if(secretCombo.length > 5) secretCombo.shift();
-        if(secretCombo.join(',') === winCombo) {
-            document.body.classList.toggle('rgb-active');
-            secretCombo = [];
-        }
-    }
+    function render() {
+        const list = document.getElementById('u_list');
+        const query = document.getElementById('search').value.toLowerCase();
+        list.innerHTML = "";
 
-    function showAuth(m) {
-        document.getElementById('login-form').style.display = m=='login'?'block':'none';
-        document.getElementById('reg-form').style.display = m=='reg'?'block':'none';
-    }
+        Object.entries(allUsers).forEach(([nick, u]) => {
+            if(nick.toLowerCase().includes(query) || (u.deviceID && u.deviceID.toLowerCase().includes(query))) {
+                const card = document.createElement('div');
+                card.className = 'card';
+                
+                const isBanned = u.ban || u.deviceID_ban;
 
-    function register() {
-        const n = document.getElementById('r-n').value.trim();
-        const p = document.getElementById('r-p').value.trim();
-        if(n && p) {
-            db.ref('users/'+n).set({ pass:p, vip:false, verified:false, ban:false, deviceID:myDeviceID })
-            .then(() => { alert("Аккаунт создан!"); showAuth('login'); });
-        }
-    }
+                card.innerHTML = `
+                    <div class="nick-row">
+                        <span class="nick-name">${nick} 
+                            ${u.vip ? '<span class="badge" style="background:var(--main); color:#000">VIP</span>' : ''}
+                            ${u.verified ? '<span class="badge b-ver">VERIFIED</span>' : ''}
+                            ${isBanned ? '<span class="badge b-ban">BANNED</span>' : ''}
+                        </span>
+                    </div>
 
-    function login() {
-        const n = document.getElementById('l-n').value.trim();
-        const p = document.getElementById('l-p').value.trim();
-        // СЛУШАЕМ ИЗМЕНЕНИЯ В РЕАЛЬНОМ ВРЕМЕНИ (чтобы Verify работало сразу)
-        db.ref('users/'+n).on('value', s => {
-            const d = s.val();
-            if(d && d.pass === p) {
-                if(d.ban || d.deviceID_ban === myDeviceID) {
-                    document.body.innerHTML = "<h1 style='color:red;text-align:center;margin-top:50px;'>ВЫ ЗАБАНЕНЫ</h1>";
-                    return;
-                }
-                me = { nick:n, vip:d.vip, verified:d.verified };
-                document.getElementById('auth-box').style.display = 'none';
-                document.getElementById('portal-ui').style.display = 'flex';
-                renderProfile(); loadFriends(); renderAdd();
+                    <div class="info-text">Пароль: <span class="val">${u.pass}</span></div>
+                    <div class="info-text">DeviceID: <span class="dev-id">${u.deviceID || 'Неизвестно'}</span></div>
+                    
+                    <div class="btn-grid">
+                        <button class="btn btn-vip" onclick="upd('${nick}', 'vip', ${!u.vip})">${u.vip?'Снять VIP':'Дать VIP'}</button>
+                        <button class="btn btn-ver" onclick="upd('${nick}', 'verified', ${!u.verified})">${u.verified?'Снять Verify':'Дать Verify'}</button>
+                        
+                        ${isBanned ? 
+                            `<button class="btn btn-unban" onclick="unban('${nick}')">🔓 РАЗБАНИТЬ</button>` : 
+                            `<button class="btn btn-ban" onclick="ban('${nick}', '${u.deviceID}')">🚫 ЗАБАНЬ ПО ID</button>`
+                        }
+                        
+                        <button class="btn btn-del" onclick="delUser('${nick}')">УДАЛИТЬ АККАУНТ ПОЛНОСТЬЮ</button>
+                    </div>
+                `;
+                list.appendChild(card);
             }
         });
-        loadGames();
     }
 
-    function loadGames() {
-        db.ref('games').on('value', s => {
-            const list = document.getElementById('games-list'); list.innerHTML = "";
-            if(s.val()) Object.entries(s.val()).reverse().forEach(([id, g]) => {
-                list.innerHTML += `<div class="card"><b>${g.title}</b><br><small>Автор: ${g.author}</small>
-                <button class="btn" style="background:var(--online); color:#fff; margin-top:10px;" onclick="window.open('${g.url}')">ИГРАТЬ</button></div>`;
-            });
-        });
-    }
+    // Функции управления
+    function upd(n, f, v) { db.ref('users/' + n).update({ [f]: v }); }
 
-    // ТУТ ИСПРАВЛЕНА ПРОВЕРКА VERIFY
-    function renderAdd() {
-        const c = document.getElementById('add-content');
-        if(me.verified === true || me.vip === true) {
-            c.innerHTML = `<div class="card"><input id="gt" placeholder="Название"><input id="gl" placeholder="Ссылка"><button class="btn" onclick="send()">ОПУБЛИКОВАТЬ</button></div>`;
-        } else {
-            c.innerHTML = `<div class="card" style="text-align:center;">У вас нет прав для публикации. Получите <b>Verify</b> в админке.</div>`;
+    function ban(n, dev) {
+        if(confirm("Забанить игрока " + n + " по устройству?")) {
+            db.ref('users/' + n).update({ ban: true, deviceID_ban: dev || "unknown" });
         }
     }
 
-    function send() {
-        const t = document.getElementById('gt').value; const l = document.getElementById('gl').value;
-        if(t && l) db.ref('games').push({ title:t, url:l, author:me.nick }).then(() => alert("Игра отправлена!"));
+    function unban(n) {
+        if(confirm("Разблокировать игрока " + n + "?")) {
+            db.ref('users/' + n).update({ ban: false, deviceID_ban: null });
+        }
     }
 
-    function search() {
-        const q = document.getElementById('u-search').value.toLowerCase();
-        const res = document.getElementById('search-res');
-        if(q.length < 2) { res.innerHTML = ""; return; }
-        db.ref('users').once('value', s => {
-            res.innerHTML = "";
-            s.forEach(child => {
-                const name = child.key;
-                if(name.toLowerCase().includes(q) && name !== me.nick) {
-                    res.innerHTML += `<div class="friend-item"><span>👤 ${name}</span><button class="btn" style="width:auto; padding:5px 10px;" onclick="addF('${name}')">Добавить</button></div>`;
-                }
-            });
-        });
-    }
-
-    function addF(t) { db.ref('users/'+t+'/requests/'+me.nick).set(true); alert("Запрос отправлен!"); }
-
-    function loadFriends() {
-        db.ref('users/'+me.nick+'/friends').on('value', s => {
-            const l = document.getElementById('friends-list'); l.innerHTML = "";
-            if(s.val()) Object.keys(s.val()).forEach(n => {
-                l.innerHTML += `<div class="friend-item"><span>👤 ${n}</span><span style="color:var(--online)">●</span></div>`;
-            });
-        });
-        db.ref('users/'+me.nick+'/requests').on('value', s => {
-            if(s.val()) Object.keys(s.val()).forEach(n => {
-                if(confirm(n + " хочет в друзья!")) {
-                    db.ref('users/'+me.nick+'/friends/'+n).set(true);
-                    db.ref('users/'+n+'/friends/'+me.nick).set(true);
-                }
-                db.ref('users/'+me.nick+'/requests/'+n).remove();
-            });
-        });
-    }
-
-    function renderProfile() {
-        document.getElementById('profile-info').innerHTML = `<h3>${me.nick} ${me.verified?'✅':''}</h3><p style="color:var(--main)">ID: ${myDeviceID}</p>`;
+    function delUser(n) {
+        if(confirm("Внимание! Удаление " + n + " нельзя отменить. Удалить?")) {
+            db.ref('users/' + n).remove();
+        }
     }
 </script>
 </body>
