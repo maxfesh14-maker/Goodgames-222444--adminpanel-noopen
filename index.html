@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GG ADMIN V5 TITAN</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <style>
+        :root { --main: #FBC02D; --bg: #050505; --card: #121212; --text: #eee; --red: #ff4444; --green: #4CAF50; --blue: #2196F3; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 15px; }
+        
+        h1 { color: var(--main); text-align: center; font-size: 24px; text-transform: uppercase; border-bottom: 2px solid #222; padding-bottom: 10px; }
+        h2 { font-size: 16px; color: #888; margin-top: 20px; }
+
+        /* ПОИСК */
+        #search { width: 100%; padding: 12px; background: #1a1a1a; border: 1px solid #333; color: #fff; border-radius: 8px; margin-bottom: 15px; box-sizing: border-box; }
+
+        /* КАРТОЧКИ */
+        .card { 
+            background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #222; 
+            margin-bottom: 10px; position: relative; animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        /* КНОПКИ */
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+        .btn { padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 11px; text-transform: uppercase; }
+        .btn-ok { background: var(--green); color: #fff; }
+        .btn-vip { background: var(--main); color: #000; }
+        .btn-ban { background: var(--red); color: #fff; }
+        .btn-unban { background: #444; color: #fff; }
+        .btn-del { background: #222; color: #888; grid-column: span 2; }
+
+        /* ИНФО */
+        .nick { font-size: 18px; font-weight: bold; margin-bottom: 5px; display: flex; align-items: center; justify-content: space-between; }
+        .badge { font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-left: 5px; }
+        .b-vip { background: var(--main); color: #000; }
+        .b-ban { background: var(--red); color: #fff; }
+        .b-hacker { background: #0f0; color: #000; box-shadow: 0 0 5px #0f0; } /* Лампочка для тех, кто в RGB режиме */
+
+        .details { font-size: 12px; color: #777; font-family: monospace; }
+        .pass { color: var(--green); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<h1>TITAN ADMIN V5</h1>
+
+<div class="section">
+    <h2>🚀 БЫСТРЫЙ ПОИСК ИГРОКОВ</h2>
+    <input type="text" id="search" placeholder="Ник или DeviceID..." oninput="render()">
+    <div id="user-list">Загрузка базы...</div>
+</div>
+
+<div class="section">
+    <h2>🎮 УПРАВЛЕНИЕ ИГРАМИ</h2>
+    <div id="game-list"></div>
+</div>
+
+<script>
+    // Твой конфиг Firebase
+    const firebaseConfig = { apiKey: "AIzaSyCD1HEwz_NsJDasETxc6X4IdCJ6_WFj-LA", databaseURL: "https://goodgames-222444-default-rtdb.firebaseio.com" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let users = {};
+
+    // Подгружаем пользователей
+    db.ref('users').on('value', s => {
+        users = s.val() || {};
+        render();
+    });
+
+    function render() {
+        const list = document.getElementById('user-list');
+        const q = document.getElementById('search').value.toLowerCase();
+        list.innerHTML = "";
+
+        Object.entries(users).forEach(([nick, u]) => {
+            if(nick.toLowerCase().includes(q) || (u.deviceID && u.deviceID.toLowerCase().includes(q))) {
+                const isBanned = u.ban || u.deviceID_ban;
+                const card = document.createElement('div');
+                card.className = 'card';
+                
+                card.innerHTML = `
+                    <div class="nick">
+                        <span>${nick} ${u.vip ? '<span class="badge b-vip">VIP</span>' : ''} ${isBanned ? '<span class="badge b-ban">BAN</span>' : ''}</span>
+                        ${u.hackerMode ? '<span class="badge b-hacker">RGB ON</span>' : ''}
+                    </div>
+                    <div class="details">Ключ: <span class="pass">${u.pass}</span></div>
+                    <div class="details">Device: ${u.deviceID || 'unknown'}</div>
+                    
+                    <div class="grid">
+                        <button class="btn btn-vip" onclick="set('${nick}', 'vip', ${!u.vip})">${u.vip?'Снять VIP':'Дать VIP'}</button>
+                        <button class="btn btn-ok" onclick="set('${nick}', 'verified', ${!u.verified})">Verify</button>
+                        
+                        ${isBanned ? 
+                            `<button class="btn btn-unban" onclick="unban('${nick}')">🔓 UNBAN</button>` : 
+                            `<button class="btn btn-ban" onclick="ban('${nick}', '${u.deviceID}')">🚫 BAN DEV</button>`
+                        }
+                        
+                        <button class="btn btn-del" onclick="delUser('${nick}')">Удалить аккаунт</button>
+                    </div>
+                `;
+                list.appendChild(card);
+            }
+        });
+    }
+
+    // Утилиты
+    function set(n, f, v) { db.ref('users/' + n).update({ [f]: v }); }
+
+    function ban(n, dev) {
+        if(confirm("Забанить устройство " + n + "?")) {
+            db.ref('users/' + n).update({ ban: true, deviceID_ban: dev || "none" });
+        }
+    }
+
+    function unban(n) {
+        if(confirm("Разбанить " + n + "?")) {
+            db.ref('users/' + n).update({ ban: false, deviceID_ban: null });
+        }
+    }
+
+    function delUser(n) {
+        if(confirm("УДАЛИТЬ АККАУНТ " + n + "?")) {
+            db.ref('users/' + n).remove();
+        }
+    }
+
+    // Управление играми
+    db.ref('games').on('value', s => {
+        const gl = document.getElementById('game-list'); gl.innerHTML = "";
+        if(s.val()) Object.entries(s.val()).forEach(([id, g]) => {
+            gl.innerHTML += `<div class="card"><b>${g.title}</b><br><small>Автор: ${g.author}</small><br><button class="btn btn-del" onclick="db.ref('games/${id}').remove()">Удалить игру</button></div>`;
+        });
+    });
+</script>
+</body>
+</html>
