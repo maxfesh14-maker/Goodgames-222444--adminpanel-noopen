@@ -3,92 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TITAN ADMIN V8.6 - ANIMATED BUTTONS</title>
+    <title>GG TITAN V8.7 - ULTIMATE</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        :root { --main: #FBC02D; --bg: #050505; --card: #121212; --text: #eee; --red: #ff3333; --blue: #2196F3; }
-        
+        :root { --main: #FBC02D; --bg: #050505; --card: #121212; --text: #eee; --red: #ff3333; --blue: #2196F3; --green: #4CAF50; }
         body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 15px; }
+        
+        /* АНИМАЦИИ КНОПОК */
+        .btn { padding: 10px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 10px; transition: 0.2s; outline: none; }
+        .btn:hover { transform: translateY(-2px); filter: brightness(1.2); }
+        .btn:active { transform: scale(0.92); }
+        
+        .btn-vip { background: var(--main); color: #000; }
+        .btn-ver { background: var(--blue); color: #fff; }
+        .btn-ban { background: #333; color: var(--red); border: 1px solid var(--red); }
+        .btn-del { background: #1a1a1a; color: #888; }
+        .btn-del:hover { background: var(--red); color: #fff; }
 
-        /* ОБЩАЯ АНИМАЦИЯ КАРТОЧЕК */
-        @keyframes slideIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
+        /* ТЕХРАБОТЫ */
+        .maintenance-card { border: 2px solid var(--red); background: #1a0505; text-align: center; margin-bottom: 20px; }
+        .m-toggle { padding: 15px; font-size: 14px; width: 100%; border-radius: 10px; cursor: pointer; font-weight: bold; }
+        .m-on { background: var(--red); color: #fff; }
+        .m-off { background: var(--green); color: #fff; }
 
-        .card { 
-            background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #222; 
-            margin-bottom: 12px; animation: slideIn 0.3s ease-out forwards;
-        }
+        .card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #222; margin-bottom: 12px; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- АНИМАЦИИ КНОПОК --- */
-        .btn { 
-            padding: 12px; border: none; border-radius: 8px; cursor: pointer; 
-            font-weight: bold; text-transform: uppercase; font-size: 11px;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); /* Плавный переход */
-            position: relative; overflow: hidden; outline: none;
-        }
-
-        /* Эффект при наведении */
-        .btn:hover {
-            filter: brightness(1.2);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-            transform: translateY(-2px); /* Кнопка чуть приподнимается */
-        }
-
-        /* Эффект нажатия (Scale Down) */
-        .btn:active {
-            transform: scale(0.92); /* Кнопка сжимается */
-            filter: brightness(0.9);
-        }
-
-        /* Специфические цвета со свечением */
-        .btn-vip { 
-            background: var(--main); color: #000; 
-            box-shadow: 0 0 5px rgba(251, 192, 45, 0.2); 
-        }
-        .btn-vip:hover { box-shadow: 0 0 15px rgba(251, 192, 45, 0.4); }
-
-        .btn-ver { 
-            background: var(--blue); color: #fff; 
-        }
-        .btn-ver:hover { box-shadow: 0 0 15px rgba(33, 150, 243, 0.4); }
-
-        .btn-del { 
-            background: #1a1a1a; color: #666; border: 1px solid #333; 
-            grid-column: span 2;
-        }
-        .btn-del:hover { background: var(--red); color: #fff; border-color: var(--red); }
-
-        /* ЭКРАНЫ */
-        #auth-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .container { max-width: 800px; margin: 0 auto; display: none; }
-        input { width: 100%; padding: 12px; background: #111; border: 1px solid #333; color: #fff; border-radius: 8px; margin: 8px 0; outline: none; }
-        #logs-container { background: #0a0a0a; border: 1px solid #222; border-radius: 10px; padding: 10px; height: 120px; overflow-y: auto; font-size: 11px; color: #888; }
+        input { width: 100%; padding: 12px; background: #111; border: 1px solid #333; color: #fff; border-radius: 8px; margin: 10px 0; box-sizing: border-box; }
+        #logs-container { background: #000; height: 100px; overflow-y: auto; font-size: 11px; padding: 10px; border-radius: 8px; border: 1px solid #222; }
     </style>
 </head>
 <body>
 
-<div id="auth-screen">
-    <h2 style="color:var(--main)">TITAN ADMIN LOGIN</h2>
-    <div style="width:280px;">
-        <input type="text" id="admin-login" placeholder="Ник на портале">
-        <input type="password" id="admin-pass" placeholder="Пароль">
-        <button class="btn btn-vip" style="width:100%;" onclick="tryLogin()">ВОЙТИ</button>
-    </div>
+<div id="auth-screen" style="display:flex; flex-direction:column; align-items:center; justify-content:center; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:100;">
+    <h2 style="color:var(--main)">TITAN V8.7 LOGIN</h2>
+    <input type="text" id="a-login" placeholder="Ник" style="width:250px;">
+    <input type="password" id="a-pass" placeholder="Пароль" style="width:250px;">
+    <button class="btn btn-vip" style="width:250px;" onclick="tryLogin()">ВОЙТИ</button>
 </div>
 
-<div id="admin-content" class="container">
-    <h1>TITAN ADMIN <span style="color:#fff; font-size:12px;">V8.6</span></h1>
-    
-    <div class="card" style="border-color: var(--main); animation-delay: 0.1s;">
-        <h3 style="margin:0 0 10px 0; color:var(--main); font-size:14px;">📜 ИСТОРИЯ ДЕЙСТВИЙ</h3>
+<div id="admin-content" style="display:none; max-width: 800px; margin: 0 auto;">
+    <h1>TITAN <span style="color:#fff">CONTROL</span></h1>
+
+    <div class="card maintenance-card">
+        <h3>СТАТУС ПОРТАЛА</h3>
+        <button id="m-btn" class="m-toggle" onclick="toggleMaintenance()">ЗАГРУЗКА...</button>
+        <p style="font-size:11px; margin-top:10px; color:#888;">Если включено, пользователи увидят экран техработ</p>
+    </div>
+
+    <div class="card">
+        <h4 style="margin:0; color:var(--main)">ЛОГИ ДЕЙСТВИЙ</h4>
         <div id="logs-container"></div>
     </div>
 
     <input type="text" id="u-search" placeholder="Поиск ника..." oninput="render()">
+    
     <div id="user-list"></div>
+    <div id="game-list"></div>
+    <div id="reviews-list"></div>
 </div>
 
 <script>
@@ -97,73 +70,117 @@
     const db = firebase.database();
 
     let currentUser = "";
-    let users = {};
+    let users = {}, games = {}, reviews = {}, mStatus = false;
 
     function tryLogin() {
-        const nick = document.getElementById('admin-login').value.trim();
-        const pass = document.getElementById('admin-pass').value.trim();
-        db.ref('users/' + nick).once('value', s => {
+        const n = document.getElementById('a-login').value;
+        const p = document.getElementById('a-pass').value;
+        db.ref('users/'+n).once('value', s => {
             const u = s.val();
-            if (u && u.pass === pass && (u.vip || u.verified)) {
-                currentUser = nick;
+            if(u && u.pass === p && (u.vip || u.verified)) {
+                currentUser = n;
                 document.getElementById('auth-screen').style.display = 'none';
                 document.getElementById('admin-content').style.display = 'block';
-                startSystem();
-            } else { alert("Отказ в доступе!"); }
+                startAdmin();
+            } else { alert("Нет доступа!"); }
         });
     }
 
-    function startSystem() {
-        db.ref('admin_logs').limitToLast(10).on('value', s => {
-            const logBox = document.getElementById('logs-container');
-            logBox.innerHTML = "";
-            if(s.val()) {
-                Object.values(s.val()).reverse().forEach(l => {
-                    logBox.innerHTML += `<div>[${l.time}] <b>${l.who}:</b> ${l.text}</div>`;
-                });
-            }
+    function startAdmin() {
+        // Подгружаем техработы
+        db.ref('maintenance').on('value', s => {
+            mStatus = s.val() || false;
+            const btn = document.getElementById('m-btn');
+            btn.innerText = mStatus ? "ТЕХРАБОТЫ: ВКЛЮЧЕНЫ 🔴" : "ТЕХРАБОТЫ: ВЫКЛЮЧЕНЫ 🟢";
+            btn.className = "m-toggle " + (mStatus ? "m-on" : "m-off");
         });
-        db.ref('users').on('value', s => { users = s.val() || {}; render(); });
+
+        // Подгружаем логи
+        db.ref('admin_logs').limitToLast(15).on('value', s => {
+            const lBox = document.getElementById('logs-container');
+            lBox.innerHTML = "";
+            if(s.val()) Object.values(s.val()).reverse().forEach(l => {
+                lBox.innerHTML += `<div>[${l.time}] <b>${l.who}:</b> ${l.text}</div>`;
+            });
+        });
+
+        // Основные данные
+        db.ref().on('value', s => {
+            const d = s.val() || {};
+            users = d.users || {};
+            games = d.games || {};
+            reviews = d.reviews || {};
+            render();
+        });
+    }
+
+    function toggleMaintenance() {
+        if(confirm("Изменить статус техработ?")) {
+            db.ref('maintenance').set(!mStatus);
+            addLog(`Переключил техработы на ${!mStatus}`);
+        }
     }
 
     function render() {
         const uList = document.getElementById('user-list');
+        const gList = document.getElementById('game-list');
+        const rList = document.getElementById('reviews-list');
         const q = document.getElementById('u-search').value.toLowerCase();
-        uList.innerHTML = "<h2>👥 ИГРОКИ</h2>";
 
-        Object.entries(users).forEach(([nick, u], index) => {
+        uList.innerHTML = "<h2>👥 ЮЗЕРЫ</h2>";
+        Object.entries(users).forEach(([nick, u]) => {
             if(nick.toLowerCase().includes(q)) {
-                const card = document.createElement('div');
-                card.className = 'card';
-                // Добавляем задержку анимации для каждой карточки, чтобы они выплывали по очереди
-                card.style.animationDelay = (index * 0.05) + 's';
-                card.innerHTML = `
+                const isB = u.ban || u.deviceID_ban;
+                uList.innerHTML += `<div class="card">
                     <b>${nick} ${u.verified?'✅':''}</b>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px;">
-                        <button class="btn btn-vip" onclick="safeUpd('${nick}', 'vip', ${!u.vip})">VIP</button>
-                        <button class="btn btn-ver" onclick="safeUpd('${nick}', 'verified', ${!u.verified})">Verify</button>
-                        <button class="btn btn-del" onclick="secureDelete('${nick}')">УДАЛИТЬ</button>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:10px;">
+                        <button class="btn btn-vip" onclick="upd('users/${nick}/vip', ${!u.vip}, 'VIP для ${nick}')">VIP</button>
+                        <button class="btn btn-ver" onclick="upd('users/${nick}/verified', ${!u.verified}, 'Verify для ${nick}')">VERIFY</button>
+                        <button class="btn btn-ban" onclick="safeBan('${nick}', '${u.deviceID}')">${isB?'РАЗБАН':'БАН'}</button>
+                        <button class="btn btn-del" onclick="secureDel('users/${nick}', '${nick}')">УДАЛИТЬ</button>
                     </div>
-                `;
-                uList.appendChild(card);
+                </div>`;
             }
+        });
+
+        gList.innerHTML = "<h2>🎮 ИГРЫ</h2>";
+        Object.entries(games).forEach(([id, g]) => {
+            gList.innerHTML += `<div class="card">
+                <b>${g.title}</b> (Автор: ${g.author})
+                <button class="btn btn-del" style="width:100%; margin-top:10px;" onclick="secureDel('games/${id}', '${g.title}')">УДАЛИТЬ ИГРУ</button>
+            </div>`;
+        });
+
+        rList.innerHTML = "<h2>💬 ОТЗЫВЫ</h2>";
+        Object.entries(reviews).forEach(([id, r]) => {
+            rList.innerHTML += `<div class="card" style="border-left: 3px solid var(--blue)">
+                <b>${r.author}</b>: ${r.text}
+                <button class="btn btn-del" style="width:100%; margin-top:10px;" onclick="secureDel('reviews/${id}', 'отзыв от ${r.author}')">УДАЛИТЬ ОТЗЫВ</button>
+            </div>`;
         });
     }
 
-    function safeUpd(nick, f, v) {
-        if(confirm("Изменить статус?")) {
-            db.ref('users/'+nick).update({ [f]: v });
-            const now = new Date().toLocaleTimeString();
-            db.ref('admin_logs').push({ time: now, who: currentUser, text: `Сменил ${f} для ${nick}` });
+    function upd(path, val, log) {
+        db.ref(path).set(val);
+        addLog(log);
+    }
+
+    function safeBan(nick, dev) {
+        const isB = users[nick].ban;
+        db.ref('users/'+nick).update({ ban: !isB, deviceID_ban: !isB ? dev : null });
+        addLog(`${isB?'Разбанил':'Забанил'} ${nick}`);
+    }
+
+    function secureDel(path, name) {
+        if(prompt(`Введите УДАЛИТЬ для подтверждения: ${name}`) === "УДАЛИТЬ") {
+            db.ref(path).remove();
+            addLog(`Удалил: ${name}`);
         }
     }
 
-    function secureDelete(nick) {
-        if(prompt(`Введите УДАЛИТЬ для подтверждения: ${nick}`) === "УДАЛИТЬ") {
-            db.ref('users/'+nick).remove();
-            const now = new Date().toLocaleTimeString();
-            db.ref('admin_logs').push({ time: now, who: currentUser, text: `Удалил игрока ${nick}` });
-        }
+    function addLog(text) {
+        const time = new Date().toLocaleTimeString();
+        db.ref('admin_logs').push({ who: currentUser, text, time });
     }
 </script>
 </body>
