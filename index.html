@@ -3,132 +3,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GG ADMIN V6.1 FIX</title>
+    <title>GG TITAN ADMIN V7.3</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        :root { --main: #FBC02D; --bg: #050505; --card: #121212; --text: #eee; --red: #ff4444; --green: #4CAF50; --blue: #2196F3; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 15px; }
-        h1 { color: var(--main); text-align: center; font-size: 22px; text-transform: uppercase; border-bottom: 2px solid #222; padding-bottom: 10px; }
-        h2 { font-size: 16px; color: #888; margin-top: 20px; border-left: 4px solid var(--main); padding-left: 10px; }
-        .card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #222; margin-bottom: 10px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-        .btn { padding: 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 11px; text-transform: uppercase; }
-        .btn-ok { background: var(--green); color: #fff; }
+        :root { --main: #FBC02D; --bg: #050505; --card: #121212; --text: #eee; --red: #ff4444; --blue: #2196F3; --green: #4CAF50; }
+        
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 15px; }
+
+        h1 { color: var(--main); text-align: center; font-size: 24px; text-transform: uppercase; border-bottom: 2px solid #222; padding-bottom: 10px; margin-bottom: 20px; }
+        h2 { font-size: 18px; color: #888; margin-top: 25px; border-left: 4px solid var(--main); padding-left: 10px; }
+
+        .container { max-width: 800px; margin: 0 auto; }
+
+        .card { 
+            background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #222; 
+            margin-bottom: 12px; transition: 0.3s;
+        }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+        .btn { 
+            padding: 12px; border: none; border-radius: 8px; cursor: pointer; 
+            font-weight: bold; font-size: 11px; text-transform: uppercase; transition: 0.2s;
+        }
+        .btn:active { transform: scale(0.95); }
         .btn-vip { background: var(--main); color: #000; }
+        .btn-ver { background: var(--blue); color: #fff; }
         .btn-ban { background: var(--red); color: #fff; }
-        .btn-del { background: #222; color: #888; border: 1px solid #333; }
-        input { width: 100%; padding: 12px; background: #111; border: 1px solid #333; color: #fff; border-radius: 8px; margin: 10px 0; box-sizing: border-box; }
-        .stat { display: inline-block; padding: 2px 8px; border-radius: 20px; background: #1a1a1a; font-size: 11px; color: var(--main); }
-        .details { font-size: 12px; color: #666; font-family: monospace; margin: 5px 0; }
+        .btn-del { background: #000; color: #666; border: 1px solid #333; grid-column: span 2; }
+
+        input { 
+            width: 100%; padding: 12px; background: #111; border: 1px solid #333; 
+            color: #fff; border-radius: 8px; margin: 10px 0; box-sizing: border-box; outline: none;
+        }
+        input:focus { border-color: var(--main); }
+
+        .details { font-size: 12px; color: #666; font-family: monospace; margin-top: 5px; }
+        .status-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 5px; vertical-align: middle; }
     </style>
 </head>
 <body>
 
-<h1>TITAN ADMIN V6.1</h1>
+<div class="container">
+    <h1>TITAN ADMIN <span style="color:#fff">V7.3</span></h1>
+    
+    <div class="section">
+        <h2>👥 УПРАВЛЕНИЕ ИГРОКАМИ</h2>
+        <input type="text" id="u-search" placeholder="Поиск ника или DeviceID..." oninput="render()">
+        <div id="user-list">Загрузка базы пользователей...</div>
 
-<div class="section">
-    <h2>👥 ПОЛЬЗОВАТЕЛИ</h2>
-    <input type="text" id="u-search" placeholder="Поиск ника..." oninput="renderAll()">
-    <div id="user-list">Загрузка данных...</div>
-</div>
-
-<div class="section">
-    <h2>📊 ИГРЫ И СТАТИСТИКА</h2>
-    <div id="game-list">Загрузка данных...</div>
+        <h2>📊 МОДЕРАЦИЯ ИГР</h2>
+        <div id="game-list">Загрузка списка игр...</div>
+    </div>
 </div>
 
 <script>
+    // КОНФИГ FIREBASE
     const firebaseConfig = { apiKey: "AIzaSyCD1HEwz_NsJDasETxc6X4IdCJ6_WFj-LA", databaseURL: "https://goodgames-222444-default-rtdb.firebaseio.com" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let dataUsers = {};
-    let dataGames = {};
+    let users = {};
+    let games = {};
 
-    // Загружаем всё одним махом для стабильности
+    // Запуск системы сразу при загрузке страницы
     db.ref().on('value', snapshot => {
-        const fullData = snapshot.val() || {};
-        dataUsers = fullData.users || {};
-        dataGames = fullData.games || {};
-        renderAll();
+        const data = snapshot.val() || {};
+        users = data.users || {};
+        games = data.games || {};
+        render();
     });
 
-    function renderAll() {
-        renderUsers();
-        renderGames();
-    }
-
-    function renderUsers() {
-        const list = document.getElementById('user-list');
+    function render() {
+        const uList = document.getElementById('user-list');
+        const gList = document.getElementById('game-list');
         const q = document.getElementById('u-search').value.toLowerCase();
-        list.innerHTML = "";
+        
+        uList.innerHTML = "";
+        gList.innerHTML = "";
 
-        Object.entries(dataUsers).forEach(([nick, u]) => {
-            if (nick.toLowerCase().includes(q)) {
-                const isBanned = u.ban || u.deviceID_ban;
+        // Рендер пользователей
+        Object.entries(users).forEach(([nick, u]) => {
+            if(nick.toLowerCase().includes(q) || (u.deviceID && u.deviceID.toLowerCase().includes(q))) {
+                const isB = u.ban || u.deviceID_ban;
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.innerHTML = `
-                    <div style="display:flex; justify-content:space-between">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
                         <b>${nick} ${u.verified ? '✅' : ''}</b>
-                        <span style="color:${u.vip ? 'var(--main)' : '#444'}">VIP</span>
+                        <div>
+                            ${u.vip ? '<span class="status-badge" style="background:var(--main); color:000">VIP</span>' : ''}
+                            ${isB ? '<span class="status-badge" style="background:var(--red); color:#fff">BAN</span>' : ''}
+                        </div>
                     </div>
-                    <div class="details">ID: ${u.deviceID || 'N/A'}</div>
+                    <div class="details">Device: ${u.deviceID || 'unknown'}</div>
+                    <div class="details">Pass: <span style="color:var(--green)">${u.pass}</span></div>
+                    
                     <div class="grid">
-                        <button class="btn btn-vip" onclick="upd('users/${nick}', 'vip', ${!u.vip})">VIP</button>
-                        <button class="btn btn-ok" onclick="upd('users/${nick}', 'verified', ${!u.verified})">Verify</button>
-                        <button class="btn btn-ban" onclick="toggleBan('${nick}', '${u.deviceID}')">${isBanned ? 'РАЗБАН' : 'БАН'}</button>
-                        <button class="btn btn-del" onclick="removePath('users/${nick}')">УДАЛИТЬ</button>
+                        <button class="btn btn-vip" onclick="safeUpd('users/${nick}', 'vip', ${!u.vip}, '${nick}')">VIP</button>
+                        <button class="btn btn-ver" onclick="safeUpd('users/${nick}', 'verified', ${!u.verified}, '${nick}')">Verify</button>
+                        <button class="btn btn-ban" onclick="safeBan('${nick}', '${u.deviceID}')">${isB ? 'РАЗБАН' : 'БАН'}</button>
+                        <button class="btn btn-del" onclick="secureDelete('users/${nick}', '${nick}')">УДАЛИТЬ АККАУНТ</button>
                     </div>
                 `;
-                list.appendChild(card);
+                uList.appendChild(card);
             }
         });
-    }
 
-    function renderGames() {
-        const list = document.getElementById('game-list');
-        list.innerHTML = "";
-
-        Object.entries(dataGames).forEach(([id, g]) => {
-            if (!g) return;
-            // Правильный подсчет реакций:
-            const reactsCount = g.reactions ? Object.keys(g.reactions).length : 0;
-            
+        // Рендер игр
+        Object.entries(games).forEach(([id, g]) => {
+            const reacts = g.reactions ? Object.keys(g.reactions).length : 0;
             const card = document.createElement('div');
             card.className = 'card';
             card.innerHTML = `
                 <div style="display:flex; justify-content:space-between">
-                    <b>${g.title || 'Без названия'}</b>
-                    <span class="stat">Реакций: ${reactsCount}</span>
+                    <b>${g.title}</b>
+                    <span style="color:var(--main); font-size:12px;">❤️ ${reacts}</span>
                 </div>
-                <div class="details">Автор: ${g.author || 'Неизвестен'}</div>
+                <div class="details">Автор: ${g.author}</div>
                 <div class="grid">
-                    <button class="btn btn-del" style="grid-column: span 2" onclick="removePath('games/${id}')">УДАЛИТЬ ИГРУ</button>
+                    <button class="btn btn-del" style="grid-column: span 2" onclick="secureDelete('games/${id}', '${g.title}')">УДАЛИТЬ ИГРУ</button>
                 </div>
             `;
-            list.appendChild(card);
+            gList.appendChild(card);
         });
     }
 
-    // Универсальные функции
-    function upd(path, field, val) { db.ref(path).update({ [field]: val }); }
-    
-    function removePath(path) { 
-        if (confirm("Точно удалить?")) db.ref(path).remove(); 
+    // --- ЗАЩИЩЕННЫЕ ФУНКЦИИ ---
+
+    function safeUpd(path, field, val, nick) {
+        if(confirm(`Изменить статус ${field} для ${nick}?`)) {
+            db.ref(path).update({ [field]: val });
+        }
     }
 
-    function toggleBan(nick, dev) {
-        const userRef = db.ref('users/' + nick);
-        userRef.once('value', s => {
-            const current = s.val();
-            if (current.ban || current.deviceID_ban) {
-                userRef.update({ ban: false, deviceID_ban: null });
-            } else {
-                userRef.update({ ban: true, deviceID_ban: dev || "unknown" });
-            }
-        });
+    function safeBan(nick, dev) {
+        const isB = users[nick].ban || users[nick].deviceID_ban;
+        const msg = isB ? `Разбанить ${nick}?` : `Забанить ${nick} по устройству?`;
+        if(confirm(msg)) {
+            db.ref('users/'+nick).update({ 
+                ban: !isB, 
+                deviceID_ban: !isB ? (dev || "unknown") : null 
+            });
+        }
+    }
+
+    function secureDelete(path, name) {
+        const check = prompt(`ВНИМАНИЕ! Вы удаляете: ${name}\nДля подтверждения введите: УДАЛИТЬ`);
+        if(check === "УДАЛИТЬ") {
+            db.ref(path).remove();
+        } else if (check !== null) {
+            alert("Код неверный. Отмена.");
+        }
     }
 </script>
 </body>
