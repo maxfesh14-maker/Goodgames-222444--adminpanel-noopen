@@ -3,157 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GG TITAN ADMIN V7.3</title>
+    <title>TITAN ADMIN V8 - LOGS & AUTH</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
         :root { --main: #FBC02D; --bg: #050505; --card: #121212; --text: #eee; --red: #ff4444; --blue: #2196F3; --green: #4CAF50; }
-        
         body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 15px; }
-
-        h1 { color: var(--main); text-align: center; font-size: 24px; text-transform: uppercase; border-bottom: 2px solid #222; padding-bottom: 10px; margin-bottom: 20px; }
-        h2 { font-size: 18px; color: #888; margin-top: 25px; border-left: 4px solid var(--main); padding-left: 10px; }
-
-        .container { max-width: 800px; margin: 0 auto; }
-
-        .card { 
-            background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #222; 
-            margin-bottom: 12px; transition: 0.3s;
-        }
-
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
-        .btn { 
-            padding: 12px; border: none; border-radius: 8px; cursor: pointer; 
-            font-weight: bold; font-size: 11px; text-transform: uppercase; transition: 0.2s;
-        }
-        .btn:active { transform: scale(0.95); }
+        
+        /* ЭКРАН ВХОДА */
+        #auth-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        
+        .container { max-width: 800px; margin: 0 auto; display: none; }
+        h1 { color: var(--main); text-align: center; text-transform: uppercase; border-bottom: 2px solid #222; padding-bottom: 10px; }
+        
+        .card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #222; margin-bottom: 12px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+        
+        .btn { padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 11px; text-transform: uppercase; }
         .btn-vip { background: var(--main); color: #000; }
-        .btn-ver { background: var(--blue); color: #fff; }
-        .btn-ban { background: var(--red); color: #fff; }
         .btn-del { background: #000; color: #666; border: 1px solid #333; grid-column: span 2; }
 
-        input { 
-            width: 100%; padding: 12px; background: #111; border: 1px solid #333; 
-            color: #fff; border-radius: 8px; margin: 10px 0; box-sizing: border-box; outline: none;
-        }
-        input:focus { border-color: var(--main); }
+        /* ИСТОРИЯ (ЛОГИ) */
+        #logs-container { background: #000; border: 1px solid #333; border-radius: 10px; padding: 10px; height: 150px; overflow-y: auto; font-family: monospace; font-size: 12px; color: #888; }
+        .log-entry { border-bottom: 1px solid #222; padding: 5px 0; }
+        .log-time { color: var(--main); margin-right: 10px; }
 
-        .details { font-size: 12px; color: #666; font-family: monospace; margin-top: 5px; }
-        .status-badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 5px; vertical-align: middle; }
+        input { width: 100%; padding: 12px; background: #111; border: 1px solid #333; color: #fff; border-radius: 8px; margin: 8px 0; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>TITAN ADMIN <span style="color:#fff">V7.3</span></h1>
-    
-    <div class="section">
-        <h2>👥 УПРАВЛЕНИЕ ИГРОКАМИ</h2>
-        <input type="text" id="u-search" placeholder="Поиск ника или DeviceID..." oninput="render()">
-        <div id="user-list">Загрузка базы пользователей...</div>
-
-        <h2>📊 МОДЕРАЦИЯ ИГР</h2>
-        <div id="game-list">Загрузка списка игр...</div>
+<div id="auth-screen">
+    <h2 style="color:var(--main)">ВХОД ДЛЯ АДМИНИСТРАЦИИ</h2>
+    <div style="width:280px;">
+        <input type="text" id="admin-login" placeholder="Ваш ник на портале">
+        <input type="password" id="admin-pass" placeholder="Ваш пароль">
+        <button class="btn btn-vip" style="width:100%;" onclick="tryLogin()">ВОЙТИ</button>
     </div>
+    <p style="color:#444; font-size:12px; margin-top:20px;">Доступ только для VIP и Verified</p>
+</div>
+
+<div id="admin-content" class="container">
+    <h1>TITAN ADMIN <span style="color:#fff; font-size:14px;">V8.0</span></h1>
+    
+    <div class="card">
+        <h3 style="margin:0; color:var(--main);">📜 ИСТОРИЯ ДЕЙСТВИЙ</h3>
+        <div id="logs-container"></div>
+    </div>
+
+    <input type="text" id="u-search" placeholder="Поиск игрока..." oninput="render()">
+    <div id="user-list"></div>
+    <div id="game-list"></div>
 </div>
 
 <script>
-    // КОНФИГ FIREBASE
     const firebaseConfig = { apiKey: "AIzaSyCD1HEwz_NsJDasETxc6X4IdCJ6_WFj-LA", databaseURL: "https://goodgames-222444-default-rtdb.firebaseio.com" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    let currentUser = "";
     let users = {};
     let games = {};
 
-    // Запуск системы сразу при загрузке страницы
-    db.ref().on('value', snapshot => {
-        const data = snapshot.val() || {};
-        users = data.users || {};
-        games = data.games || {};
-        render();
-    });
+    // 1. АВТОРИЗАЦИЯ ЧЕРЕЗ БАЗУ ПОРТАЛА
+    function tryLogin() {
+        const nick = document.getElementById('admin-login').value.trim();
+        const pass = document.getElementById('admin-pass').value.trim();
+
+        db.ref('users/' + nick).once('value', s => {
+            const u = s.val();
+            if (u && u.pass === pass) {
+                if (u.vip || u.verified) {
+                    currentUser = nick;
+                    document.getElementById('auth-screen').style.display = 'none';
+                    document.getElementById('admin-content').style.display = 'block';
+                    addLog("Система", `Админ ${nick} вошел в панель`);
+                    startLiveUpdate();
+                } else {
+                    alert("У вас нет прав доступа (нужен VIP или Verify)");
+                }
+            } else {
+                alert("Неверный логин или пароль!");
+            }
+        });
+    }
+
+    // 2. ИСТОРИЯ ДЕЙСТВИЙ (ЛОГИ)
+    function addLog(who, text) {
+        const time = new Date().toLocaleTimeString();
+        const logRef = db.ref('admin_logs').push();
+        logRef.set({ time, who, text });
+    }
+
+    // Загрузка логов в реальном времени
+    function loadLogs() {
+        db.ref('admin_logs').limitToLast(20).on('value', s => {
+            const logsDiv = document.getElementById('logs-container');
+            logsDiv.innerHTML = "";
+            if (s.val()) {
+                Object.values(s.val()).reverse().forEach(log => {
+                    logsDiv.innerHTML += `<div class="log-entry"><span class="log-time">[${log.time}]</span> <b>${log.who}:</b> ${log.text}</div>`;
+                });
+            }
+        });
+    }
+
+    function startLiveUpdate() {
+        db.ref().on('value', snapshot => {
+            const d = snapshot.val() || {};
+            users = d.users || {};
+            games = d.games || {};
+            render();
+        });
+        loadLogs();
+    }
 
     function render() {
         const uList = document.getElementById('user-list');
-        const gList = document.getElementById('game-list');
         const q = document.getElementById('u-search').value.toLowerCase();
-        
-        uList.innerHTML = "";
-        gList.innerHTML = "";
+        uList.innerHTML = "<h2>👥 ИГРОКИ</h2>";
 
-        // Рендер пользователей
         Object.entries(users).forEach(([nick, u]) => {
-            if(nick.toLowerCase().includes(q) || (u.deviceID && u.deviceID.toLowerCase().includes(q))) {
-                const isB = u.ban || u.deviceID_ban;
+            if(nick.toLowerCase().includes(q)) {
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <b>${nick} ${u.verified ? '✅' : ''}</b>
-                        <div>
-                            ${u.vip ? '<span class="status-badge" style="background:var(--main); color:000">VIP</span>' : ''}
-                            ${isB ? '<span class="status-badge" style="background:var(--red); color:#fff">BAN</span>' : ''}
-                        </div>
-                    </div>
-                    <div class="details">Device: ${u.deviceID || 'unknown'}</div>
-                    <div class="details">Pass: <span style="color:var(--green)">${u.pass}</span></div>
-                    
+                    <b>${nick} ${u.verified?'✅':''}</b>
                     <div class="grid">
-                        <button class="btn btn-vip" onclick="safeUpd('users/${nick}', 'vip', ${!u.vip}, '${nick}')">VIP</button>
-                        <button class="btn btn-ver" onclick="safeUpd('users/${nick}', 'verified', ${!u.verified}, '${nick}')">Verify</button>
-                        <button class="btn btn-ban" onclick="safeBan('${nick}', '${u.deviceID}')">${isB ? 'РАЗБАН' : 'БАН'}</button>
-                        <button class="btn btn-del" onclick="secureDelete('users/${nick}', '${nick}')">УДАЛИТЬ АККАУНТ</button>
+                        <button class="btn btn-vip" onclick="safeUpd('users/${nick}', 'vip', ${!u.vip}, '${nick}', 'VIP')">VIP</button>
+                        <button class="btn" style="background:var(--blue); color:#fff" onclick="safeUpd('users/${nick}', 'verified', ${!u.verified}, '${nick}', 'Verify')">VERIFY</button>
+                        <button class="btn btn-del" onclick="secureDelete('users/${nick}', '${nick}')">УДАЛИТЬ</button>
                     </div>
                 `;
                 uList.appendChild(card);
             }
         });
-
-        // Рендер игр
-        Object.entries(games).forEach(([id, g]) => {
-            const reacts = g.reactions ? Object.keys(g.reactions).length : 0;
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.innerHTML = `
-                <div style="display:flex; justify-content:space-between">
-                    <b>${g.title}</b>
-                    <span style="color:var(--main); font-size:12px;">❤️ ${reacts}</span>
-                </div>
-                <div class="details">Автор: ${g.author}</div>
-                <div class="grid">
-                    <button class="btn btn-del" style="grid-column: span 2" onclick="secureDelete('games/${id}', '${g.title}')">УДАЛИТЬ ИГРУ</button>
-                </div>
-            `;
-            gList.appendChild(card);
-        });
     }
 
-    // --- ЗАЩИЩЕННЫЕ ФУНКЦИИ ---
-
-    function safeUpd(path, field, val, nick) {
-        if(confirm(`Изменить статус ${field} для ${nick}?`)) {
+    // ЗАЩИЩЕННЫЕ ФУНКЦИИ С ЗАПИСЬЮ В ИСТОРИЮ
+    function safeUpd(path, field, val, nick, label) {
+        if(confirm(`Изменить ${label} для ${nick}?`)) {
             db.ref(path).update({ [field]: val });
-        }
-    }
-
-    function safeBan(nick, dev) {
-        const isB = users[nick].ban || users[nick].deviceID_ban;
-        const msg = isB ? `Разбанить ${nick}?` : `Забанить ${nick} по устройству?`;
-        if(confirm(msg)) {
-            db.ref('users/'+nick).update({ 
-                ban: !isB, 
-                deviceID_ban: !isB ? (dev || "unknown") : null 
-            });
+            addLog(currentUser, `${val ? 'Дал' : 'Снял'} ${label} игроку ${nick}`);
         }
     }
 
     function secureDelete(path, name) {
-        const check = prompt(`ВНИМАНИЕ! Вы удаляете: ${name}\nДля подтверждения введите: УДАЛИТЬ`);
+        const check = prompt(`Введите УДАЛИТЬ для подтверждения удаления ${name}`);
         if(check === "УДАЛИТЬ") {
             db.ref(path).remove();
-        } else if (check !== null) {
-            alert("Код неверный. Отмена.");
+            addLog(currentUser, `Удалил объект: ${name}`);
         }
     }
 </script>
