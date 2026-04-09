@@ -3,185 +3,284 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GG TITAN V8.7 - ULTIMATE</title>
+    <title>TITAN ADMIN ULTIMATE V10.0</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
     <style>
-        :root { --main: #FBC02D; --bg: #050505; --card: #121212; --text: #eee; --red: #ff3333; --blue: #2196F3; --green: #4CAF50; }
-        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 15px; }
+        :root { 
+            --main: #FBC02D; 
+            --bg: #050505; 
+            --card: #121212; 
+            --text: #eee; 
+            --red: #ff3333; 
+            --blue: #2196F3; 
+            --green: #4CAF50; 
+        }
+
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            font-family: 'Segoe UI', sans-serif; 
+            margin: 0; 
+            padding: 15px; 
+            overflow-x: hidden; 
+        }
+
+        /* --- ЭКРАН "ТЫ ХАКЕР?" --- */
+        #hacker-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; color: var(--red); z-index: 100000;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            font-family: 'Courier New', monospace; text-align: center;
+            animation: glitch 0.1s infinite;
+        }
+        @keyframes glitch {
+            0% { transform: translate(0); text-shadow: 2px 2px blue; }
+            50% { transform: translate(-3px, 3px); text-shadow: -2px -2px red; }
+            100% { transform: translate(0); }
+        }
+
+        /* --- ЭКРАН ВХОДА --- */
+        #auth-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 50000;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+
+        /* --- ГЛАВНЫЙ ИНТЕРФЕЙС --- */
+        .container { max-width: 800px; margin: 0 auto; display: none; }
         
-        /* АНИМАЦИИ КНОПОК */
-        .btn { padding: 10px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; text-transform: uppercase; font-size: 10px; transition: 0.2s; outline: none; }
-        .btn:hover { transform: translateY(-2px); filter: brightness(1.2); }
+        h1 { color: var(--main); text-align: center; text-transform: uppercase; letter-spacing: 3px; border-bottom: 2px solid #222; padding-bottom: 10px; }
+        h2 { font-size: 18px; color: #888; border-left: 4px solid var(--main); padding-left: 10px; margin-top: 30px; }
+
+        .card { 
+            background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid #222; 
+            margin-bottom: 15px; transition: 0.3s;
+            animation: fadeIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- КНОПКИ --- */
+        .btn { 
+            padding: 12px; border: none; border-radius: 10px; cursor: pointer; 
+            font-weight: bold; text-transform: uppercase; font-size: 11px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            outline: none;
+        }
+        .btn:hover { transform: translateY(-3px); filter: brightness(1.2); box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
         .btn:active { transform: scale(0.92); }
-        
+
         .btn-vip { background: var(--main); color: #000; }
         .btn-ver { background: var(--blue); color: #fff; }
-        .btn-ban { background: #333; color: var(--red); border: 1px solid var(--red); }
-        .btn-del { background: #1a1a1a; color: #888; }
-        .btn-del:hover { background: var(--red); color: #fff; }
+        .btn-ban { background: #222; color: var(--red); border: 1px solid var(--red); }
+        .btn-del { background: #1a1a1a; color: #666; border: 1px solid #333; grid-column: span 2; }
+        .btn-del:hover { background: var(--red); color: #fff; border-color: var(--red); }
 
-        /* ТЕХРАБОТЫ */
-        .maintenance-card { border: 2px solid var(--red); background: #1a0505; text-align: center; margin-bottom: 20px; }
-        .m-toggle { padding: 15px; font-size: 14px; width: 100%; border-radius: 10px; cursor: pointer; font-weight: bold; }
-        .m-on { background: var(--red); color: #fff; }
+        /* --- ТЕХРАБОТЫ --- */
+        .m-box { border: 2px solid #222; background: #0a0a0a; padding: 20px; border-radius: 20px; }
+        .m-btn { width: 100%; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; border: none; font-size: 14px; }
+        .m-on { background: var(--red); color: #fff; box-shadow: 0 0 20px rgba(255,0,0,0.3); }
         .m-off { background: var(--green); color: #fff; }
 
-        .card { background: var(--card); padding: 15px; border-radius: 12px; border: 1px solid #222; margin-bottom: 12px; animation: slideUp 0.3s ease; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* --- ЛОГИ И ПОИСК --- */
+        input { 
+            width: 100%; padding: 15px; background: #111; border: 1px solid #333; 
+            color: #fff; border-radius: 12px; margin: 10px 0; box-sizing: border-box; outline: none; 
+        }
+        input:focus { border-color: var(--main); }
 
-        input { width: 100%; padding: 12px; background: #111; border: 1px solid #333; color: #fff; border-radius: 8px; margin: 10px 0; box-sizing: border-box; }
-        #logs-container { background: #000; height: 100px; overflow-y: auto; font-size: 11px; padding: 10px; border-radius: 8px; border: 1px solid #222; }
+        #logs-container { 
+            background: #000; height: 130px; overflow-y: auto; font-family: monospace; 
+            font-size: 11px; padding: 10px; border-radius: 10px; border: 1px solid #222; color: #888; 
+        }
+        .log-entry { border-bottom: 1px solid #111; padding: 5px 0; display: flex; justify-content: space-between; }
     </style>
 </head>
 <body>
 
-<div id="auth-screen" style="display:flex; flex-direction:column; align-items:center; justify-content:center; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:100;">
-    <h2 style="color:var(--main)">TITAN V8.7 LOGIN</h2>
-    <input type="text" id="a-login" placeholder="Ник" style="width:250px;">
-    <input type="password" id="a-pass" placeholder="Пароль" style="width:250px;">
-    <button class="btn btn-vip" style="width:250px;" onclick="tryLogin()">ВОЙТИ</button>
+<div id="hacker-screen">
+    <h1 style="font-size: 70px; margin: 0;">ТЫ ХАКЕР?</h1>
+    <p style="font-size: 20px;">ДОСТУП ЗАБЛОКИРОВАН. ДАННЫЕ ОТПРАВЛЕНЫ.</p>
+    <div id="h-timer" style="font-size: 30px; margin-top: 20px;">10</div>
 </div>
 
-<div id="admin-content" style="display:none; max-width: 800px; margin: 0 auto;">
-    <h1>TITAN <span style="color:#fff">CONTROL</span></h1>
+<div id="auth-screen">
+    <h1 style="color:var(--main); margin-bottom: 30px;">TITAN SYSTEM ACCESS</h1>
+    <div style="width: 300px;">
+        <input type="text" id="auth-login" placeholder="Ваш ник на портале">
+        <input type="password" id="auth-pass" placeholder="Ваш пароль">
+        <button class="btn btn-vip" style="width: 100%; margin-top: 10px;" onclick="handleAuth()">АВТОРИЗАЦИЯ</button>
+        <p id="auth-err" style="color:var(--red); text-align:center; font-size:12px; margin-top:15px;"></p>
+    </div>
+</div>
 
-    <div class="card maintenance-card">
-        <h3>СТАТУС ПОРТАЛА</h3>
-        <button id="m-btn" class="m-toggle" onclick="toggleMaintenance()">ЗАГРУЗКА...</button>
-        <p style="font-size:11px; margin-top:10px; color:#888;">Если включено, пользователи увидят экран техработ</p>
+<div id="admin-panel" class="container">
+    <h1>TITAN <span style="color:#fff">V10.0</span></h1>
+
+    <div class="m-box">
+        <h3 style="margin: 0 0 10px 0; color: var(--main);">🛠 РЕЖИМ ОБСЛУЖИВАНИЯ</h3>
+        <input type="text" id="m-reason-text" placeholder="Причина техработ...">
+        <button id="m-toggle" class="m-btn" onclick="toggleMaint()">ЗАГРУЗКА...</button>
     </div>
 
-    <div class="card">
-        <h4 style="margin:0; color:var(--main)">ЛОГИ ДЕЙСТВИЙ</h4>
+    <div class="card" style="margin-top: 20px; border-color: #333;">
+        <h3 style="margin: 0 0 10px 0; color: var(--main); font-size: 14px;">📜 ЖУРНАЛ СОБЫТИЙ</h3>
         <div id="logs-container"></div>
     </div>
 
-    <input type="text" id="u-search" placeholder="Поиск ника..." oninput="render()">
+    <input type="text" id="user-search" placeholder="Поиск игрока по нику..." oninput="renderAll()">
     
-    <div id="user-list"></div>
-    <div id="game-list"></div>
-    <div id="reviews-list"></div>
+    <div id="users-render"></div>
+    <div id="games-render"></div>
+    <div id="reviews-render"></div>
 </div>
 
 <script>
-    const firebaseConfig = { apiKey: "AIzaSyCD1HEwz_NsJDasETxc6X4IdCJ6_WFj-LA", databaseURL: "https://goodgames-222444-default-rtdb.firebaseio.com" };
+    // КОНФИГУРАЦИЯ БАЗЫ (Твоя база GoodGames)
+    const firebaseConfig = { 
+        apiKey: "AIzaSyCD1HEwz_NsJDasETxc6X4IdCJ6_WFj-LA", 
+        databaseURL: "https://goodgames-222444-default-rtdb.firebaseio.com" 
+    };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let currentUser = "";
-    let users = {}, games = {}, reviews = {}, mStatus = false;
+    let adminNick = "";
+    let loginAttempts = 0;
+    let localData = { users: {}, games: {}, reviews: {}, maintenance: {} };
 
-    function tryLogin() {
-        const n = document.getElementById('a-login').value;
-        const p = document.getElementById('a-pass').value;
-        db.ref('users/'+n).once('value', s => {
-            const u = s.val();
-            if(u && u.pass === p && (u.vip || u.verified)) {
-                currentUser = n;
+    // --- СИСТЕМА ВХОДА ---
+    function handleAuth() {
+        const nick = document.getElementById('auth-login').value.trim();
+        const pass = document.getElementById('auth-pass').value.trim();
+
+        db.ref('users/' + nick).once('value', snapshot => {
+            const user = snapshot.val();
+            if (user && user.pass === pass && (user.vip || user.verified)) {
+                adminNick = nick;
                 document.getElementById('auth-screen').style.display = 'none';
-                document.getElementById('admin-content').style.display = 'block';
-                startAdmin();
-            } else { alert("Нет доступа!"); }
+                document.getElementById('admin-panel').style.display = 'block';
+                addLog("Система", `Вход выполнен: ${nick}`);
+                initSystem();
+            } else {
+                loginAttempts++;
+                document.getElementById('auth-err').innerText = `Ошибка! Осталось попыток: ${3 - loginAttempts}`;
+                if (loginAttempts >= 3) triggerHacker();
+            }
         });
     }
 
-    function startAdmin() {
-        // Подгружаем техработы
+    function triggerHacker() {
+        document.getElementById('auth-screen').style.display = 'none';
+        const screen = document.getElementById('hacker-screen');
+        screen.style.display = 'flex';
+        let time = 10;
+        const timer = setInterval(() => {
+            time--;
+            document.getElementById('h-timer').innerText = time;
+            if (time <= 0) { clearInterval(timer); location.reload(); }
+        }, 1000);
+    }
+
+    // --- ИНИЦИАЛИЗАЦИЯ ДАННЫХ ---
+    function initSystem() {
+        // Следим за техработами
         db.ref('maintenance').on('value', s => {
-            mStatus = s.val() || false;
-            const btn = document.getElementById('m-btn');
-            btn.innerText = mStatus ? "ТЕХРАБОТЫ: ВКЛЮЧЕНЫ 🔴" : "ТЕХРАБОТЫ: ВЫКЛЮЧЕНЫ 🟢";
-            btn.className = "m-toggle " + (mStatus ? "m-on" : "m-off");
+            localData.maintenance = s.val() || { status: false, reason: "" };
+            const btn = document.getElementById('m-toggle');
+            btn.innerText = localData.maintenance.status ? "ВЫКЛЮЧИТЬ ТЕХРАБОТЫ 🔴" : "ВКЛЮЧИТЬ ТЕХРАБОТЫ 🟢";
+            btn.className = "m-btn " + (localData.maintenance.status ? "m-on" : "m-off");
+            document.getElementById('m-reason-text').value = localData.maintenance.reason || "";
         });
 
-        // Подгружаем логи
+        // Следим за логами
         db.ref('admin_logs').limitToLast(15).on('value', s => {
-            const lBox = document.getElementById('logs-container');
-            lBox.innerHTML = "";
-            if(s.val()) Object.values(s.val()).reverse().forEach(l => {
-                lBox.innerHTML += `<div>[${l.time}] <b>${l.who}:</b> ${l.text}</div>`;
+            const box = document.getElementById('logs-container');
+            box.innerHTML = "";
+            if (s.val()) Object.values(s.val()).reverse().forEach(l => {
+                box.innerHTML += `<div class="log-entry"><span><b>${l.who}</b>: ${l.text}</span> <small style="color:#444">${l.time}</small></div>`;
             });
         });
 
-        // Основные данные
+        // Следим за всем остальным
         db.ref().on('value', s => {
-            const d = s.val() || {};
-            users = d.users || {};
-            games = d.games || {};
-            reviews = d.reviews || {};
-            render();
+            const data = s.val() || {};
+            localData.users = data.users || {};
+            localData.games = data.games || {};
+            localData.reviews = data.reviews || {};
+            renderAll();
         });
     }
 
-    function toggleMaintenance() {
-        if(confirm("Изменить статус техработ?")) {
-            db.ref('maintenance').set(!mStatus);
-            addLog(`Переключил техработы на ${!mStatus}`);
-        }
+    // --- ФУНКЦИИ УПРАВЛЕНИЯ ---
+    function toggleMaint() {
+        const reason = document.getElementById('m-reason-text').value;
+        const newStatus = !localData.maintenance.status;
+        db.ref('maintenance').set({ status: newStatus, reason: reason });
+        addLog(adminNick, `Техработы: ${newStatus ? 'ВКЛ' : 'ВЫКЛ'}`);
     }
 
-    function render() {
-        const uList = document.getElementById('user-list');
-        const gList = document.getElementById('game-list');
-        const rList = document.getElementById('reviews-list');
-        const q = document.getElementById('u-search').value.toLowerCase();
+    function renderAll() {
+        const uBox = document.getElementById('users-render');
+        const gBox = document.getElementById('games-render');
+        const search = document.getElementById('user-search').value.toLowerCase();
 
-        uList.innerHTML = "<h2>👥 ЮЗЕРЫ</h2>";
-        Object.entries(users).forEach(([nick, u]) => {
-            if(nick.toLowerCase().includes(q)) {
-                const isB = u.ban || u.deviceID_ban;
-                uList.innerHTML += `<div class="card">
-                    <b>${nick} ${u.verified?'✅':''}</b>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:10px;">
-                        <button class="btn btn-vip" onclick="upd('users/${nick}/vip', ${!u.vip}, 'VIP для ${nick}')">VIP</button>
-                        <button class="btn btn-ver" onclick="upd('users/${nick}/verified', ${!u.verified}, 'Verify для ${nick}')">VERIFY</button>
-                        <button class="btn btn-ban" onclick="safeBan('${nick}', '${u.deviceID}')">${isB?'РАЗБАН':'БАН'}</button>
-                        <button class="btn btn-del" onclick="secureDel('users/${nick}', '${nick}')">УДАЛИТЬ</button>
+        uBox.innerHTML = "<h2>👥 ПОЛЬЗОВАТЕЛИ</h2>";
+        Object.entries(localData.users).forEach(([nick, u]) => {
+            if (nick.toLowerCase().includes(search)) {
+                const isBan = u.ban || u.deviceID_ban;
+                uBox.innerHTML += `
+                    <div class="card">
+                        <div style="display:flex; justify-content:space-between">
+                            <b>${nick} ${u.verified ? '✅' : ''}</b>
+                            <span style="font-size:10px; color:#555">${u.deviceID || 'NoID'}</span>
+                        </div>
+                        <div style="font-size:12px; color:var(--green); margin: 5px 0;">Пароль: ${u.pass}</div>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+                            <button class="btn btn-vip" onclick="fastUpd('users/${nick}/vip', ${!u.vip}, 'VIP для ${nick}')">${u.vip?'Снять VIP':'Дать VIP'}</button>
+                            <button class="btn btn-ver" onclick="fastUpd('users/${nick}/verified', ${!u.verified}, 'Verify для ${nick}')">VERIFY</button>
+                            <button class="btn btn-ban" onclick="banUser('${nick}', '${u.deviceID}')">${isBan?'РАЗБАН':'БАН'}</button>
+                            <button class="btn btn-del" onclick="secureDelete('users/${nick}', '${nick}')">УДАЛИТЬ АККАУНТ</button>
+                        </div>
                     </div>
-                </div>`;
+                `;
             }
         });
 
-        gList.innerHTML = "<h2>🎮 ИГРЫ</h2>";
-        Object.entries(games).forEach(([id, g]) => {
-            gList.innerHTML += `<div class="card">
-                <b>${g.title}</b> (Автор: ${g.author})
-                <button class="btn btn-del" style="width:100%; margin-top:10px;" onclick="secureDel('games/${id}', '${g.title}')">УДАЛИТЬ ИГРУ</button>
-            </div>`;
-        });
-
-        rList.innerHTML = "<h2>💬 ОТЗЫВЫ</h2>";
-        Object.entries(reviews).forEach(([id, r]) => {
-            rList.innerHTML += `<div class="card" style="border-left: 3px solid var(--blue)">
-                <b>${r.author}</b>: ${r.text}
-                <button class="btn btn-del" style="width:100%; margin-top:10px;" onclick="secureDel('reviews/${id}', 'отзыв от ${r.author}')">УДАЛИТЬ ОТЗЫВ</button>
-            </div>`;
+        gBox.innerHTML = "<h2>🎮 ИГРЫ И ОТЗЫВЫ</h2>";
+        Object.entries(localData.games).forEach(([id, g]) => {
+            gBox.innerHTML += `
+                <div class="card" style="border-left: 4px solid var(--main)">
+                    <b>${g.title}</b> <small>by ${g.author}</small>
+                    <button class="btn btn-del" style="width:100%; margin-top:10px;" onclick="secureDelete('games/${id}', '${g.title}')">УДАЛИТЬ ИГРУ</button>
+                </div>
+            `;
         });
     }
 
-    function upd(path, val, log) {
+    function fastUpd(path, val, msg) {
         db.ref(path).set(val);
-        addLog(log);
+        addLog(adminNick, msg);
     }
 
-    function safeBan(nick, dev) {
-        const isB = users[nick].ban;
-        db.ref('users/'+nick).update({ ban: !isB, deviceID_ban: !isB ? dev : null });
-        addLog(`${isB?'Разбанил':'Забанил'} ${nick}`);
+    function banUser(nick, dev) {
+        const current = localData.users[nick].ban;
+        db.ref('users/' + nick).update({ ban: !current, deviceID_ban: !current ? dev : null });
+        addLog(adminNick, `${!current ? 'ЗАБАНИЛ' : 'РАЗБАНИЛ'} ${nick}`);
     }
 
-    function secureDel(path, name) {
-        if(prompt(`Введите УДАЛИТЬ для подтверждения: ${name}`) === "УДАЛИТЬ") {
+    function secureDelete(path, name) {
+        if (prompt(`Введите УДАЛИТЬ для подтверждения удаления: ${name}`) === "УДАЛИТЬ") {
             db.ref(path).remove();
-            addLog(`Удалил: ${name}`);
+            addLog(adminNick, `УДАЛИЛ: ${name}`);
         }
     }
 
-    function addLog(text) {
+    function addLog(who, text) {
         const time = new Date().toLocaleTimeString();
-        db.ref('admin_logs').push({ who: currentUser, text, time });
+        db.ref('admin_logs').push({ who, text, time });
     }
 </script>
 </body>
 </html>
+ 
